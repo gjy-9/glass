@@ -3,9 +3,10 @@ name: Build & Verify
 
 on:
   push:
-    branches: [ "main", "master" ] # Runs on push to main/master branch
+    branches: [ "main", "master" ]
   pull_request:
     branches: [ "main", "master" ]
+  workflow_dispatch: # 允许手动触发
 
 jobs:
   build:
@@ -13,7 +14,9 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
+        os: [macos-latest]
+        # 只构建 macOS，减少资源使用
+        # 如果需要其他平台，可以添加: windows-latest, ubuntu-latest
 
     steps:
       - name: 🚚 Checkout code
@@ -37,11 +40,12 @@ jobs:
       - name: 🖥️ Build Electron app
         run: npm run build
 
-      - name: 📤 Upload artifacts
+      - name: 📤 Upload macOS artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: Glass-${{ runner.os }}-${{ runner.arch }}
+          name: Glass-macOS-universal
           path: dist/
+          retention-days: 30
 
       - name: 🚨 Send failure notification to Slack
         if: failure()
