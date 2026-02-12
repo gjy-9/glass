@@ -1,0 +1,12 @@
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "setup",
+			"problemMatcher": [],
+			"label": "npm: setup",
+			"detail": "npm install && cd pickleglass_web && npm install && npm run build && cd .. && npm start"
+		}
+	]
+}

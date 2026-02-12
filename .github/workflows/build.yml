@@ -1,0 +1,55 @@
+
+name: Build & Verify
+
+on:
+  push:
+    branches: [ "main", "master" ] # Runs on push to main/master branch
+  pull_request:
+    branches: [ "main", "master" ]
+
+jobs:
+  build:
+    name: Build ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest, ubuntu-latest]
+
+    steps:
+      - name: 🚚 Checkout code
+        uses: actions/checkout@v4
+
+      - name: ⚙️ Setup Node.js environment
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+          cache: 'npm'
+
+      - name: 📦 Install root dependencies
+        run: npm install
+
+      - name: 🌐 Install and build web (Renderer) part
+        working-directory: ./pickleglass_web
+        run: |
+          npm install
+          npm run build
+
+      - name: 🖥️ Build Electron app
+        run: npm run build
+
+      - name: 📤 Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Glass-${{ runner.os }}-${{ runner.arch }}
+          path: dist/
+
+      - name: 🚨 Send failure notification to Slack
+        if: failure()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_CHANNEL: general
+          SLACK_TITLE: "🚨 Build Failed"
+          SLACK_MESSAGE: "😭 Build failed for `${{ github.repository }}` on ${{ matrix.os }}"
+          SLACK_COLOR: 'danger'
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+
